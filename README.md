@@ -1,4 +1,4 @@
-# AI-Powered-Insurance-for-India-s-Gig-Economy-
+# AI-Powered-Insurance-for-India's-Gig-Economy-
 AI-powered parametric income insurance for India's gig delivery workers — automatic UPI payouts when verified disruptions hit, no claims needed.
 The Problem
 Amazon Flex and Flipkart Ekart delivery partners earn Rs. 3,500–5,000/week with zero income protection. When heavy rain floods roads, extreme heat makes outdoor work dangerous, AQI spikes, curfews are imposed, or fulfillment centres close — they simply cannot work and lose 20–30% of monthly income with no compensation from platforms.
