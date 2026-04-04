@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Claims Management</h1>
+<p class="subtitle">Check for disruptions and view auto-triggered payouts.</p>
+
+<div class="worker-id-box">
+  <span style="color:var(--muted); font-size:0.85rem; white-space:nowrap;">Worker ID</span>
+  <input type="number" id="worker-id-input" placeholder="Enter your Worker ID"/>
+  <input type="text" id="city-input" placeholder="Your city (e.g. Mumbai)" style="flex:1;"/>
+  <button class="btn" onclick="checkDisruptions()">Check Now →</button>
+</div>
+
+<!-- Disruption Result -->
+<div id="disruption-result" style="display:none;" class="card">
+  <h2 id="disruption-title">🔍 Disruption Check</h2>
+  <div id="disruption-signals"></div>
+  <div class="alert" id="disruption-alert"></div>
+</div>
+
+<!-- Claims History -->
+<div id="claims-container">
+  <div class="card" style="text-align:center; color:var(--muted); padding: 3rem;">
+    <div style="font-size:3rem; margin-bottom:1rem;">🔍</div>
+    <p>Enter your Worker ID and city, then click "Check Now" to scan for disruptions.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function checkDisruptions() {
+    const workerId = document.getElementById('worker-id-input').value;
+    const city = document.getElementById('city-input').value || 'Mumbai';
+    if (!workerId) { alert('Please enter your Worker ID'); return; }
+
+    // Step 1: Check disruptions
+    const res = await fetch('/api/check-disruptions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({worker_id: parseInt(workerId), city})
+    });
+    const data = await res.json();
+
+    // Show disruption result
+    const resultDiv = document.getElementById('disruption-result');
+    const signalsDiv = document.getElementById('disruption-signals');
+    resultDiv.style.display = 'block';
+
+    if (data.reasons.length === 0) {
+      signalsDiv.innerHTML = `<p style="color:var(--muted);">✅ No significant disruptions detected in ${city} right now.</p>`;
+    } else {
+      signalsDiv.innerHTML = `
+        <p style="color:var(--muted); margin-bottom:1rem; font-size:0.85rem;">Signals detected:</p>
+        ${data.reasons.map(r => `
+          <div style="display:flex; align-items:center; gap:0.75rem; padding:0.75rem; background:rgba(249,115,22,0.08); border:1px solid rgba(249,115,22,0.2); border-radius:10px; margin-bottom:0.5rem; font-size:0.9rem;">
+            ⚠️ ${r}
+          </div>
+        `).join('')}
+      `;
+    }
+
+    if (data.claim_triggered) {
+      showAlert('disruption-alert', '🚨 2+ disruption signals confirmed! Claim auto-triggered. ₹500 payout initiated to your UPI.', 'warning');
+    }
+
+    // Step 2: Load claims history
+    loadClaims(workerId);
+  }
+
+  async function loadClaims(workerId) {
+    const res = await fetch(`/api/claims/${workerId}`);
+    const claims = await res.json();
+    const container = document.getElementById('claims-container');
+
+    if (claims.length === 0) {
+      container.innerHTML = `
+        <div class="card" style="text-align:center; color:var(--muted); padding:2rem;">
+          <p>No claims yet — you're all good! 🎉</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="card">
+        <h2>📑 Claims History</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Claim ID</th>
+              <th>Reason</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Triggered At</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${claims.map(c => `
+              <tr>
+                <td>#${c.id}</td>
+                <td style="max-width:250px; font-size:0.82rem; color:var(--muted);">${c.reason}</td>
+                <td>₹${c.amount}</td>
+                <td><span class="badge badge-${c.status}">${c.status.toUpperCase()}</span></td>
+                <td style="font-size:0.82rem; color:var(--muted);">${c.triggered_at}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+</script>
+{% endblock %}

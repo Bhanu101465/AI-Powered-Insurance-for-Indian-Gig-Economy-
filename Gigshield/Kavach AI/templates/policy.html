@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Policy Management</h1>
+<p class="subtitle">View and manage your active insurance policies.</p>
+
+<div class="worker-id-box">
+  <span style="color:var(--muted); font-size:0.85rem; white-space:nowrap;">Worker ID</span>
+  <input type="number" id="worker-id-input" placeholder="Enter your Worker ID"/>
+  <button class="btn" onclick="loadPolicies()">Load →</button>
+</div>
+
+<div id="policies-container">
+  <div class="card" style="text-align:center; color:var(--muted); padding: 3rem;">
+    <div style="font-size:3rem; margin-bottom:1rem;">🛡️</div>
+    <p>Enter your Worker ID above to view your policies.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function loadPolicies() {
+    const workerId = document.getElementById('worker-id-input').value;
+    if (!workerId) return;
+
+    const res = await fetch(`/api/policies/${workerId}`);
+    const policies = await res.json();
+    const container = document.getElementById('policies-container');
+
+    if (policies.length === 0) {
+      container.innerHTML = `
+        <div class="card" style="text-align:center; color:var(--muted); padding:3rem;">
+          <div style="font-size:3rem; margin-bottom:1rem;">📭</div>
+          <p>No policies found. <a href="/register" style="color:var(--accent);">Register first →</a></p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="card">
+        <h2>📋 Your Policies</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Policy ID</th>
+              <th>Plan</th>
+              <th>Weekly Premium</th>
+              <th>Coverage</th>
+              <th>Valid Until</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${policies.map(p => `
+              <tr>
+                <td>#${p.id}</td>
+                <td>${p.plan}</td>
+                <td>₹${p.weekly_premium}</td>
+                <td>₹${p.coverage_amount}</td>
+                <td>${p.end_date}</td>
+                <td><span class="badge badge-${p.status}">${p.status.toUpperCase()}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+</script>
+{% endblock %}
