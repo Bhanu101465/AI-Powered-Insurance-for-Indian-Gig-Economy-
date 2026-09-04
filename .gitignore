@@ -1,4 +1,6 @@
 __pycache__/
 #this pycache is auto generated everytime you run your code purely for Python's own speed
 #adds nothing useful and looks unpolished to anyone reviewing the code 
-# so we removing it whenver it generates removing it using this file in this file 
+# so we removing it whenver it generates removing it using this file in this file
+# in github keep an eye on red and green line files red means untracked files 
+ 
